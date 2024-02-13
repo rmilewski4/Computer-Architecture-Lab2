@@ -12,3 +12,6 @@ void load_program(char* instruction_array[]);
 
 //Needed to initalize array to store instructions
 char** initalize_program();
+
+//Free malloc'd memory
+void cleanup_program(char** instruction_array);

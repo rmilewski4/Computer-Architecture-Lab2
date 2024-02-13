@@ -1,5 +1,12 @@
 #include "lab2.h"
 
+void cleanup_program(char** instruction_array) {
+    for(int i = 0; i < maxfilesize; i++) {
+        free(instruction_array[i]);
+    }
+    free(instruction_array);
+}
+
 //for wes to implement, filename stored in prog_file
 void load_program(char* instruction_array[]) {
 
@@ -19,8 +26,8 @@ int main(int argc, char*argv[]) {
 		printf("Error: You should provide input file.\nUsage: %s <input program> \n\n",  argv[0]);
 		exit(1);
 	}
-    strncpy(prog_file,argv[1],32);
+    strcpy(prog_file,argv[1]);
     char** instruction_array = initalize_program();
     load_program(instruction_array);
-
+    cleanup_program(instruction_array);
 }
