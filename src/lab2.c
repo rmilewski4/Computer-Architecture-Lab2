@@ -1,5 +1,9 @@
 #include "lab2.h"
 
+void split_input(instruction* instruction_array) {
+
+}
+
 void cleanup_program(instruction* instruction_array) {
     for(int i = 0; i < maxfilesize; i++) {
         free(instruction_array[i].instruction);
@@ -8,7 +12,7 @@ void cleanup_program(instruction* instruction_array) {
 }
 
 //for wes to implement, filename stored in prog_file
-void load_program(instruction* instruction_array[]) {
+void load_program(instruction* instruction_array) {
 
 }
 

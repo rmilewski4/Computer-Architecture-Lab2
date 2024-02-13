@@ -22,9 +22,10 @@ typedef struct instruction_array_struct {
     uint32_t imm4_1and11;
     uint32_t imm12and10_5;
 } instruction;  
-
+//takes in the instructionarray with instruction already loaded and determines opcode and rest of registers.
+void split_input(instruction* instructionarray);
 //Read in input from prog_file and store into memory array.
-void load_program(instruction* instruction_array[]);
+void load_program(instruction* instruction_array);
 
 //Needed to initalize array to store instructions
 instruction* initalize_program();
