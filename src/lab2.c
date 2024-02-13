@@ -1,22 +1,22 @@
 #include "lab2.h"
 
-void cleanup_program(char** instruction_array) {
+void cleanup_program(instruction* instruction_array) {
     for(int i = 0; i < maxfilesize; i++) {
-        free(instruction_array[i]);
+        free(instruction_array[i].instruction);
     }
     free(instruction_array);
 }
 
 //for wes to implement, filename stored in prog_file
-void load_program(char* instruction_array[]) {
+void load_program(instruction* instruction_array[]) {
 
 }
 
-char** initalize_program() {
-    char** inst_array = malloc(maxfilesize*sizeof(char*));
+instruction* initalize_program() {
+    instruction* inst_array = malloc(maxfilesize*sizeof(instruction));
     for(int i = 0; i < maxfilesize; i++ ) {
-        inst_array[i] = malloc(maxinstsize*sizeof(char));
-        memset(inst_array[i],0,maxinstsize);
+        inst_array[i].instruction = malloc(maxinstsize*sizeof(char));
+        memset(inst_array[i].instruction,0,maxinstsize);
     }
     return inst_array;
 }
@@ -27,7 +27,7 @@ int main(int argc, char*argv[]) {
 		exit(1);
 	}
     strcpy(prog_file,argv[1]);
-    char** instruction_array = initalize_program();
+    instruction* instruction_array = initalize_program();
     load_program(instruction_array);
     cleanup_program(instruction_array);
 }
