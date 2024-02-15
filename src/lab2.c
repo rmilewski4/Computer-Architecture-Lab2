@@ -1,7 +1,17 @@
 #include "lab2.h"
 
 void split_input(instruction* instruction_array) {
-
+    char* instruction = instruction_array->instruction;
+    char* split;
+    split=strtok(instruction, " ");
+    strcpy(instruction_array->name,split);
+    //R-Type
+    if((strncmp("add",split,3)==0)) {
+        instruction_array->type = 'R';
+        //opcode of 0110011 in binary is 51 in decimal
+        instruction_array->opcode = 51;
+        instruction_array->funct3 = 0;
+    }
 }
 
 void cleanup_program(instruction* instruction_array) {

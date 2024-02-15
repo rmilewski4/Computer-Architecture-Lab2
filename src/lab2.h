@@ -11,6 +11,7 @@ typedef struct instruction_array_struct {
     char* instruction;
     //Should hold type (i.e. R, I, S, etc.)
     char type;
+    char name[7];
     uint32_t opcode;
     uint32_t rd;
     uint32_t funct3;
