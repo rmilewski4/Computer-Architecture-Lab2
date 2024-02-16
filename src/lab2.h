@@ -23,6 +23,11 @@ typedef struct instruction_array_struct {
     uint32_t imm4_1and11;
     uint32_t imm12and10_5;
 } instruction;  
+
+typedef struct {
+    char* name;
+    instruction (*processing_func)(instruction);
+} InstructionMapping;
 //R-type
 instruction r_processing(instruction i, char*split);
 instruction add_processing(instruction i);
@@ -36,44 +41,81 @@ instruction sra_processing(instruction i);
 instruction slt_processing(instruction i);
 instruction sltu_processing(instruction i);
 //I-im
-instruction addi_processing(instruction);
-instruction xori_processing(instruction);
-instruction ori_processing(instruction);
-instruction andi_processing(instruction);
-instruction slli_processing(instruction);
-instruction srli_processing(instruction);
-instruction srai_processing(instruction);
-instruction slti_processing(instruction);
-instruction slti_processing(instruction);
-instruction sltiu_processing(instruction);
+instruction iim_processing(instruction i, char*split);
+instruction addi_processing(instruction i);
+instruction xori_processing(instruction i);
+instruction ori_processing(instruction i);
+instruction andi_processing(instruction i);
+instruction slli_processing(instruction i);
+instruction srli_processing(instruction i);
+instruction srai_processing(instruction i);
+instruction slti_processing(instruction i);
+instruction sltiu_processing(instruction i);
 //I-load
-instruction lb_processing(instruction);
-instruction lh_processing(instruction);
-instruction lw_processing(instruction);
-instruction lbu_processing(instruction);
-instruction lhu_processing(instruction);
+instruction lb_processing(instruction i);
+instruction lh_processing(instruction i);
+instruction lw_processing(instruction i);
+instruction lbu_processing(instruction i);
+instruction lhu_processing(instruction i);
 //S-type
-instruction sb_processing(instruction);
-instruction sh_processing(instruction);
-instruction sw_processing(instruction);
+instruction sb_processing(instruction i);
+instruction sh_processing(instruction i);
+instruction sw_processing(instruction i);
 //b-type
-instruction beq_processing(instruction);
-instruction bne_processing(instruction);
-instruction blt_processing(instruction);
-instruction bge_processing(instruction);
-instruction bltu_processing(instruction);
-instruction bgeu_processing(instruction);
+instruction beq_processing(instruction i);
+instruction bne_processing(instruction i);
+instruction blt_processing(instruction i);
+instruction bge_processing(instruction i);
+instruction bltu_processing(instruction i);
+instruction bgeu_processing(instruction i);
 //jump
-instruction jal_processing(instruction);
-instruction jalr_processing(instruction);
+instruction jal_processing(instruction i);
+instruction jalr_processing(instruction i);
 //u-type
-instruction lui_processing(instruction);
-instruction auipc_processing(instruction);
-enum opcode {
-    R=51,IImm=19,ILd=3,S=32,B=99,J=111,jalr=103,lui=55,auipc=12,ecall=115
-};
-enum funct3 {
-    add=0,sub=0,xor
+instruction lui_processing(instruction i);
+instruction auipc_processing(instruction i);
+
+instruction ecall_processing(instruction i);
+//array for all possible assembly names and their processing function as a function pointer
+InstructionMapping mappings[] = {
+        {"add", add_processing},
+        {"sub", sub_processing},
+        {"xor", xor_processing},
+        {"or", or_processing},
+        {"and", and_processing},
+        {"sll", sll_processing},
+        {"srl", srl_processing},
+        {"sra", sra_processing},
+        {"slt",slt_processing},
+        {"sltu",sltu_processing},
+        {"addi",addi_processing},
+        {"xori",xori_processing},
+        {"ori",ori_processing},
+        {"andi",andi_processing},
+        {"slli",slli_processing},
+        {"srli",srli_processing},
+        {"srai",srai_processing},
+        {"slti",slti_processing},
+        {"sltiu",sltiu_processing},
+        {"lb", lb_processing},
+        {"lh", lh_processing},
+        {"lw", lw_processing},
+        {"lbu", lbu_processing},
+        {"lhu", lhu_processing},
+        {"sb", sb_processing},
+        {"sh", sh_processing},
+        {"sw", sw_processing},
+        {"beq", beq_processing},
+        {"bne", bne_processing},
+        {"blt", blt_processing},
+        {"bge", bge_processing},
+        {"bltu", bltu_processing},
+        {"bgeu", bgeu_processing},
+        {"jal", jal_processing},
+        {"jalr", jalr_processing},
+        {"lui", lui_processing},
+        {"auipc", auipc_processing},
+        {"ecall", ecall_processing}
 };
 //takes in the instructionarray with instruction already loaded and determines opcode and rest of registers.
 void split_input(instruction* instructionarray);

@@ -1,5 +1,5 @@
 #include "lab2.h"
-//TODO: create rest of I-processing,S,etc. to handle all register operations
+//TODO: create rest of Iload-processing,S,etc. to handle all register operations
 //follow how the r instructions are implemented.
 //finally create functions that create the machine code number.
 instruction r_processing(instruction i, char*split) {
@@ -37,6 +37,46 @@ instruction r_processing(instruction i, char*split) {
     printf("rd = %d, rs1 = %d, rs2 = %d\n",i.rd,i.rs1,i.rs2);
     return i;
 }
+instruction iim_processing(instruction i, char*split) {
+//pull out rd
+    split = strtok(NULL, ",");
+    if(strncmp(split,"zero",4)==0) {
+        i.rd = 0;
+    }
+    else {
+        //skip past the x character in register names
+        split++;
+        uint32_t rd = strtol(split,NULL,10);
+        i.rd = rd;
+    }
+    //pull out rs1
+    split = strtok(NULL,", ");
+    if(strncmp(split,"zero",4)==0) {
+        i.rs1 = 0;
+    }
+    else {
+        split++;
+        uint32_t rs1 = strtol(split,NULL,10);
+        i.rs1 = rs1;
+    }
+    //pull out imm
+    split = strtok(NULL,", ");
+    uint32_t imm = strtol(split,NULL,10);
+    //checking if instruction is the srai, slli, or srli which needs to conserve the 0x20 or 0x00 in the 5:11 bits
+    if(i.funct3 == 1 || i.funct3 == 5) {
+        //we only want the first 5 bits to conserve the 0x20 or 0x00, so we create a bitmask and AND it with the original data stored in immediate
+        uint32_t imm5bitmask = 31;
+        imm &= imm5bitmask;
+        //perform bitwise OR to keep both sections intact.
+        i.imm11_0 |= imm;
+    }
+    else {
+        i.imm11_0 = imm;
+    }
+    printf("rd = %d, rs1 = %d, imm = %d\n",i.rd,i.rs1,i.imm11_0);
+    return i;
+}
+
 instruction add_processing(instruction i) {
     i.type = 'R';
     //opcode of 0110011 in binary is 51 in decimal
@@ -108,47 +148,87 @@ instruction sltu_processing(instruction i) {
     i.funct7 = 0;
     return i;
 }
+
+//I-immediate processing instructions
+instruction addi_processing(instruction i) {
+    i.type = 'I';
+    i.opcode = 19;
+    i.funct3 = 0;
+    return i;
+}
+instruction xori_processing(instruction i) {
+    i.type = 'I';
+    i.opcode = 19;
+    i.funct3 = 4;
+    return i;
+}
+instruction ori_processing(instruction i) {
+    i.type = 'I';
+    i.opcode = 19;
+    i.funct3 = 6;
+    return i;
+}
+instruction andi_processing(instruction i) {
+    i.type = 'I';
+    i.opcode = 19;
+    i.funct3 = 7;
+    return i;
+}
+instruction slli_processing(instruction i) {
+    i.type = 'I';
+    i.opcode = 19;
+    i.funct3 = 1;
+    return i;
+}
+instruction srli_processing(instruction i) {
+    i.type = 'I';
+    i.opcode = 19;
+    i.funct3 = 5;
+    return i;
+}
+instruction srai_processing(instruction i) {
+    i.type = 'I';
+    i.opcode = 19;
+    i.funct3 = 5;
+    //11_0 is set to 2048 because srai specifies that imm[5:11]=0x20. To set it to this number, we set the 11th bit to a one and the rest to 0, which is 2048
+    i.imm11_0 = 2048;
+    return i;
+}
+instruction slti_processing(instruction i) {
+    i.type = 'I';
+    i.opcode = 19;
+    i.funct3 = 2;
+    return i;
+}
+instruction sltiu_processing(instruction i) {
+    i.type = 'I';
+    i.opcode = 19;
+    i.funct3 = 3;
+    return i;
+}
 void split_input(instruction* instruction_array) {
+    //loop through all instructoins
     for(int i = 0; i < numinstructions;i++) {
         char* instruction = instruction_array[i].instruction;
         char* split;
+        //pull out name of instruction first
         split=strtok(instruction, " ");
         printf("Name is %s\n",split);
-        //R-Type, check for string length of name of instruction to avoid catching immediate instructions as well.
-        if(strncmp("add",split,3)==0 && (strlen(split)==3)) {
-            instruction_array[i] = add_processing(instruction_array[i]);
-        }
-        else if(strncmp("sub",split,3)==0 && (strlen(split)==3)) {
-            instruction_array[i] = sub_processing(instruction_array[i]);
-        }
-        else if(strncmp("xor",split,3)==0) {
-            instruction_array[i] = xor_processing(instruction_array[i]);
-        }
-        else if(strncmp("or",split,2)==0 && (strlen(split)==2)) {
-            instruction_array[i] = or_processing(instruction_array[i]);
-        }
-        else if(strncmp("and",split,3)==0 && (strlen(split)==3)) {
-            instruction_array[i] = and_processing(instruction_array[i]);
-        }
-        else if(strncmp("sll",split,3)==0 && (strlen(split)==3)) {
-            instruction_array[i] = sll_processing(instruction_array[i]);
-        }
-        else if(strncmp("srl",split,3)==0 && (strlen(split)==3)) {
-            instruction_array[i] = srl_processing(instruction_array[i]);
-        }
-        else if(strncmp("sra",split,3)==0 && (strlen(split)==3)) {
-            instruction_array[i] = sra_processing(instruction_array[i]);
-        }
-        else if(strncmp("slt",split,3)==0 && (strlen(split)==3)) {
-            instruction_array[i] = slt_processing(instruction_array[i]);
-        }
-        else if(strncmp("sltu",split,4)==0 && (strlen(split)==4)) {
-            instruction_array[i] = sltu_processing(instruction_array[i]);
+        //loop through the above array of possibilities to try and find a match in that array
+        for(int maps = 0; maps < sizeof(mappings)/sizeof(mappings[0]);maps++) {
+            if(strncmp(mappings[maps].name,split,strlen(mappings[maps].name))==0 && strlen(split)==strlen(mappings[maps].name)) {
+                //if a match was found, update the instruction array using the function pointer inside of the above mappings array
+                instruction_array[i] = mappings[maps].processing_func(instruction_array[i]);
+                //break out of searching through the array since a match was found
+                break;
+            }
         }
         if(instruction_array[i].type == 'R') {
             instruction_array[i] = r_processing(instruction_array[i],split);
         }
-        //I-Immediate instructions
+        else if(instruction_array[i].type == 'I') {
+            instruction_array[i] = iim_processing(instruction_array[i],split);
+        }
     }
 }
 
@@ -165,7 +245,7 @@ void load_program(instruction* instruction_array) {
     numinstructions = 3;
     strcpy(instruction_array[0].instruction,"add x10, zero, x32\0");
     strcpy(instruction_array[1].instruction,"add x11, x10, x9\0");
-    strcpy(instruction_array[2].instruction,"addi x12, zero, 20\0");
+    strcpy(instruction_array[2].instruction,"srai x12, zero, 20\0");
 }
 
 instruction* initalize_program() {
