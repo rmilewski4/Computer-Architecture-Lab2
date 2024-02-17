@@ -52,6 +52,7 @@ instruction srai_processing(instruction i);
 instruction slti_processing(instruction i);
 instruction sltiu_processing(instruction i);
 //I-load
+instruction ild_processing(instruction i, char*split);
 instruction lb_processing(instruction i);
 instruction lh_processing(instruction i);
 instruction lw_processing(instruction i);

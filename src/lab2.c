@@ -63,7 +63,7 @@ instruction iim_processing(instruction i, char*split) {
     split = strtok(NULL,", ");
     uint32_t imm = strtol(split,NULL,10);
     //checking if instruction is the srai, slli, or srli which needs to conserve the 0x20 or 0x00 in the 5:11 bits
-    if(i.funct3 == 1 || i.funct3 == 5) {
+    if((i.funct3 == 1) || i.funct3 == 5) {
         //we only want the first 5 bits to conserve the 0x20 or 0x00, so we create a bitmask and AND it with the original data stored in immediate
         uint32_t imm5bitmask = 31;
         imm &= imm5bitmask;
@@ -76,7 +76,30 @@ instruction iim_processing(instruction i, char*split) {
     printf("rd = %d, rs1 = %d, imm = %d\n",i.rd,i.rs1,i.imm11_0);
     return i;
 }
-
+instruction ild_processing(instruction i, char*split) {
+    //pull out rd
+    split = strtok(NULL, ", ");
+    if(strncmp(split,"zero",4)==0) {
+        i.rd = 0;
+    }
+    else {
+        //skip past the x character in register names
+        split++;
+        uint32_t rd = strtol(split,NULL,10);
+        i.rd = rd;
+    }
+    //pull out imm
+    split = strtok(NULL, "(");
+    uint32_t imm = strtol(split, NULL, 10);
+    i.imm11_0 = imm;
+    //pull out rs1
+    split = strtok(NULL, ")");
+    split++;
+    uint32_t rs1 = strtol(split, NULL, 10);
+    i.rs1 = rs1;
+    printf("rd = %d, imm = %d, rs1 = %d\n",i.rd,i.imm11_0,i.rs1);
+    return i;
+}
 instruction add_processing(instruction i) {
     i.type = 'R';
     //opcode of 0110011 in binary is 51 in decimal
@@ -206,6 +229,123 @@ instruction sltiu_processing(instruction i) {
     i.funct3 = 3;
     return i;
 }
+//i-load instructions
+instruction lb_processing(instruction i) {
+    i.type = 'I';
+    i.opcode = 3;
+    i.funct3 = 0;
+    return i;
+}
+instruction lh_processing(instruction i) {
+    i.type = 'I';
+    i.opcode = 3;
+    i.funct3 = 1;
+    return i;
+}
+instruction lw_processing(instruction i) {
+    i.type = 'I';
+    i.opcode = 3;
+    i.funct3 = 2;
+    return i;
+}
+instruction lbu_processing(instruction i) {
+    i.type = 'I';
+    i.opcode = 3;
+    i.funct3 = 4;
+    return i;
+}
+instruction lhu_processing(instruction i) {
+    i.type = 'I';
+    i.opcode = 3;
+    i.funct3 = 5;
+    return i;
+}
+//S-type
+instruction sb_processing(instruction i) {
+    i.type = 'S';
+    i.opcode = 35;
+    i.funct3 = 0;
+    return i;
+}
+instruction sh_processing(instruction i) {
+    i.type = 'S';
+    i.opcode = 35;
+    i.funct3 = 1;
+    return i;
+}
+instruction sw_processing(instruction i) {
+    i.type = 'S';
+    i.opcode = 35;
+    i.funct3 = 2;
+    return i;
+}
+//b-type
+instruction beq_processing(instruction i) {
+    i.type = 'B';
+    i.opcode = 99;
+    i.funct3 = 0;
+    return i;
+}
+instruction bne_processing(instruction i) {
+    i.type = 'B';
+    i.opcode = 99;
+    i.funct3 = 1;
+    return i;
+}
+instruction blt_processing(instruction i) {
+    i.type = 'B';
+    i.opcode = 99;
+    i.funct3 = 4;
+    return i;
+}
+instruction bge_processing(instruction i) {
+    i.type = 'B';
+    i.opcode = 99;
+    i.funct3 = 5;
+    return i;
+}
+instruction bltu_processing(instruction i) {
+    i.type = 'B';
+    i.opcode = 99;
+    i.funct3 = 6;
+    return i;
+}
+instruction bgeu_processing(instruction i) {
+    i.type = 'B';
+    i.opcode = 99;
+    i.funct3 = 7;
+    return i;
+}
+//jump
+instruction jal_processing(instruction i) {
+    i.type = 'J';
+    i.opcode = 111;
+    return i;
+}
+instruction jalr_processing(instruction i) {
+    i.type = 'I';
+    i.opcode = 103;
+    i.funct3 = 0;
+    return i;
+}
+//u-type
+instruction lui_processing(instruction i) {
+    i.type = 'U';
+    i.opcode = 55;
+    return i;
+}
+instruction auipc_processing(instruction i) {
+    i.type = 'U';
+    i.opcode = 23;
+    return i;
+}
+
+instruction ecall_processing(instruction i) {
+    i.type = 'I';
+    i.opcode = 115;
+    i.funct3 = 0;
+    return i;
+}
 void split_input(instruction* instruction_array) {
     //loop through all instructoins
     for(int i = 0; i < numinstructions;i++) {
@@ -226,8 +366,11 @@ void split_input(instruction* instruction_array) {
         if(instruction_array[i].type == 'R') {
             instruction_array[i] = r_processing(instruction_array[i],split);
         }
-        else if(instruction_array[i].type == 'I') {
+        else if(instruction_array[i].type == 'I' && instruction_array[i].opcode == 19) {
             instruction_array[i] = iim_processing(instruction_array[i],split);
+        }
+        else if(instruction_array[i].type == 'I' && (instruction_array[i].opcode == 3 || instruction_array[i].opcode == 103)) {
+            instruction_array[i] = ild_processing(instruction_array[i],split);
         }
     }
 }
@@ -244,7 +387,7 @@ void cleanup_program(instruction* instruction_array) {
 void load_program(instruction* instruction_array) {
     numinstructions = 3;
     strcpy(instruction_array[0].instruction,"add x10, zero, x32\0");
-    strcpy(instruction_array[1].instruction,"add x11, x10, x9\0");
+    strcpy(instruction_array[1].instruction,"lh x11, 30(x29)\0");
     strcpy(instruction_array[2].instruction,"srai x12, zero, 20\0");
 }
 
