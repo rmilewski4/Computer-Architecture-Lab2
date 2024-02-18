@@ -100,6 +100,85 @@ instruction ild_processing(instruction i, char*split) {
     printf("rd = %d, imm = %d, rs1 = %d\n",i.rd,i.imm11_0,i.rs1);
     return i;
 }
+instruction s_processing(instruction i, char* split) {
+    //pull out rs2
+    split = strtok(NULL, ", ");
+    if(strncmp(split,"zero",4)==0) {
+        i.rs2 = 0;
+    }
+    else {
+        //skip past the x character in register names
+        split++;
+        uint32_t rs2 = strtol(split,NULL,10);
+        i.rs2 = rs2;
+    }
+    //pull out imm
+    split = strtok(NULL, "(");
+    uint32_t imm = strtol(split, NULL, 10);
+    uint32_t zerotofourbitmask = 31;
+    uint32_t fivetoelevenbitmask = 4064;
+    i.imm4_0 = imm & zerotofourbitmask;
+    i.imm11_5 = imm & fivetoelevenbitmask;
+    //pull out rs1
+    split = strtok(NULL, ")");
+    if(strncmp(split,"zero",4)==0) {
+        i.rs1 = 0;
+    }
+    else {
+        //skip past the x character in register names
+        split++;
+        uint32_t rs1 = strtol(split,NULL,10);
+        i.rs1 = rs1;
+    }
+    printf("rs2 = %d, imm = %d, imm0_4 = %d, imm11_5 = %d, rs1 = %d\n",i.rd,imm, i.imm4_0,i.imm11_5,i.rs1);
+    return i;
+}
+instruction b_processing(instruction i, char* split) {
+    //pull out rs1
+    split = strtok(NULL, ",");
+    if(strncmp(split,"zero",4)==0) {
+        i.rs1 = 0;
+    }
+    else {
+        //skip past the x character in register names
+        split++;
+        uint32_t rs1 = strtol(split,NULL,10);
+        i.rs1 = rs1;
+    }
+    //pull out rs2
+    split = strtok(NULL,", ");
+    if(strncmp(split,"zero",4)==0) {
+        i.rs2 = 0;
+    }
+    else {
+        split++;
+        uint32_t rs2 = strtol(split,NULL,10);
+        i.rs2 = rs2;
+    }
+    //pull out imm/label
+    split = strtok(NULL,", ");
+    //if not a digit, must be a label, so calculate address
+    if(!isdigit(split[0])) {
+        //TODO: CALCULATE LABEL ADDRESSES
+    }
+    else {
+        uint32_t imm = strtol(split,NULL,10);
+        uint32_t imm4to1bitmask = 30;
+        uint32_t imm4to1 = imm & imm4to1bitmask;
+        uint32_t bit11mask = 2048;
+        uint32_t bit11 = (imm & bit11mask) >> 11;
+        //change the first bit from the 0'th to 11th by doing an OR with the two.
+        i.imm4_1and11 = imm4to1 | bit11;
+        uint32_t bit12mask = 4096;
+        //grab bit 12 and shift into bit 11's spot that it will be taking
+        uint32_t bit12 = (imm & bit12mask) >> 1;
+        uint32_t bits10to5mask = 2016;
+        uint32_t imm10to5 = imm & bits10to5mask;
+        i.imm12and10_5 = imm10to5 | bit12;
+    }
+    printf("rs1 = %d, rs2 = %d, imm4:1|11 = %d, imm12|10:5 = %d\n",i.rs1,i.rs2,i.imm4_1and11, i.imm12and10_5);
+    return i;
+}
 instruction add_processing(instruction i) {
     i.type = 'R';
     //opcode of 0110011 in binary is 51 in decimal
@@ -372,6 +451,12 @@ void split_input(instruction* instruction_array) {
         else if(instruction_array[i].type == 'I' && (instruction_array[i].opcode == 3 || instruction_array[i].opcode == 103)) {
             instruction_array[i] = ild_processing(instruction_array[i],split);
         }
+        else if(instruction_array[i].type == 'S') {
+            instruction_array[i] = s_processing(instruction_array[i],split);
+        }
+        else if(instruction_array[i].type == 'B') {
+            instruction_array[i] = b_processing(instruction_array[i],split);
+        }
     }
 }
 
@@ -386,9 +471,9 @@ void cleanup_program(instruction* instruction_array) {
 //for wes to implement, filename stored in prog_file add counter to get number of instructions, stored in numinstructions
 void load_program(instruction* instruction_array) {
     numinstructions = 3;
-    strcpy(instruction_array[0].instruction,"add x10, zero, x32\0");
+    strcpy(instruction_array[0].instruction,"beq x10, x15, 5647\0");
     strcpy(instruction_array[1].instruction,"lh x11, 30(x29)\0");
-    strcpy(instruction_array[2].instruction,"srai x12, zero, 20\0");
+    strcpy(instruction_array[2].instruction,"sb x12, 63(x19)\0");
 }
 
 instruction* initalize_program() {
@@ -407,6 +492,8 @@ instruction* initalize_program() {
         inst_array[i].rs1 = 0;
         inst_array[i].rs2 = 0;
         inst_array[i].type = 0;
+        inst_array[i].imm11_5 = 0;
+        inst_array[i].imm31_12 = 0;
 
     }
     return inst_array;

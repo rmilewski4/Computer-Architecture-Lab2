@@ -3,7 +3,7 @@
 #include <string.h>
 #include <stdint.h>
 #include <assert.h>
-
+#include <ctype.h>
 char prog_file[32];
 int maxfilesize = 50;
 int maxinstsize = 255;
@@ -22,6 +22,8 @@ typedef struct instruction_array_struct {
     uint32_t imm4_0;
     uint32_t imm4_1and11;
     uint32_t imm12and10_5;
+    uint32_t imm11_5;
+    uint32_t imm31_12;
 } instruction;  
 
 typedef struct {
@@ -59,10 +61,12 @@ instruction lw_processing(instruction i);
 instruction lbu_processing(instruction i);
 instruction lhu_processing(instruction i);
 //S-type
+instruction s_processing(instruction i, char* split);
 instruction sb_processing(instruction i);
 instruction sh_processing(instruction i);
 instruction sw_processing(instruction i);
 //b-type
+instruction b_processing(instruction i, char* split);
 instruction beq_processing(instruction i);
 instruction bne_processing(instruction i);
 instruction blt_processing(instruction i);
