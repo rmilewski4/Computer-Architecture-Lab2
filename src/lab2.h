@@ -12,6 +12,8 @@ typedef struct instruction_array_struct {
     char* instruction;
     //Should hold type (i.e. R, I, S, etc.)
     char type;
+    char* label;
+    uint32_t pc;
     uint32_t opcode;
     uint32_t rd;
     uint32_t funct3;
@@ -30,6 +32,10 @@ typedef struct {
     char* name;
     instruction (*processing_func)(instruction);
 } InstructionMapping;
+void scan_for_labels(instruction* instruction_array);
+int checkForLabels(instruction i);
+//calculate label offsett used for branching instructions. Accepts list of instructions, current instruction's PC & Label trying to reach. Returns imm offset needed for instructions.
+uint32_t calculateLabelOffset(instruction* instruction_array, uint32_t currentPC, char* label);
 //R-type
 instruction r_processing(instruction i, char*split);
 instruction add_processing(instruction i);
@@ -66,7 +72,7 @@ instruction sb_processing(instruction i);
 instruction sh_processing(instruction i);
 instruction sw_processing(instruction i);
 //b-type
-instruction b_processing(instruction i, char* split);
+instruction b_processing(instruction* instruction_array, instruction i, char* split);
 instruction beq_processing(instruction i);
 instruction bne_processing(instruction i);
 instruction blt_processing(instruction i);

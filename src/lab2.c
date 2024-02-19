@@ -133,7 +133,7 @@ instruction s_processing(instruction i, char* split) {
     printf("rs2 = %d, imm = %d, imm0_4 = %d, imm11_5 = %d, rs1 = %d\n",i.rd,imm, i.imm4_0,i.imm11_5,i.rs1);
     return i;
 }
-instruction b_processing(instruction i, char* split) {
+instruction b_processing(instruction* instruction_array, instruction i, char* split) {
     //pull out rs1
     split = strtok(NULL, ",");
     if(strncmp(split,"zero",4)==0) {
@@ -157,25 +157,28 @@ instruction b_processing(instruction i, char* split) {
     }
     //pull out imm/label
     split = strtok(NULL,", ");
+    uint32_t imm = 0;
     //if not a digit, must be a label, so calculate address
     if(!isdigit(split[0])) {
         //TODO: CALCULATE LABEL ADDRESSES
+        imm = calculateLabelOffset(instruction_array,i.pc,split);
     }
     else {
-        uint32_t imm = strtol(split,NULL,10);
-        uint32_t imm4to1bitmask = 30;
-        uint32_t imm4to1 = imm & imm4to1bitmask;
-        uint32_t bit11mask = 2048;
-        uint32_t bit11 = (imm & bit11mask) >> 11;
-        //change the first bit from the 0'th to 11th by doing an OR with the two.
-        i.imm4_1and11 = imm4to1 | bit11;
-        uint32_t bit12mask = 4096;
-        //grab bit 12 and shift into bit 11's spot that it will be taking
-        uint32_t bit12 = (imm & bit12mask) >> 1;
-        uint32_t bits10to5mask = 2016;
-        uint32_t imm10to5 = imm & bits10to5mask;
-        i.imm12and10_5 = imm10to5 | bit12;
+        imm = strtol(split,NULL,10);
     }
+    printf("IMM in branch is %d\n", imm);
+    uint32_t imm4to1bitmask = 30;
+    uint32_t imm4to1 = imm & imm4to1bitmask;
+    uint32_t bit11mask = 2048;
+    uint32_t bit11 = (imm & bit11mask) >> 11;
+    //change the first bit from the 0'th to 11th by doing an OR with the two.
+    i.imm4_1and11 = imm4to1 | bit11;
+    uint32_t bit12mask = 4096;
+    //grab bit 12 and shift into bit 11's spot that it will be taking
+    uint32_t bit12 = (imm & bit12mask) >> 1;
+    uint32_t bits10to5mask = 2016;
+    uint32_t imm10to5 = imm & bits10to5mask;
+    i.imm12and10_5 = imm10to5 | bit12;
     printf("rs1 = %d, rs2 = %d, imm4:1|11 = %d, imm12|10:5 = %d\n",i.rs1,i.rs2,i.imm4_1and11, i.imm12and10_5);
     return i;
 }
@@ -430,9 +433,25 @@ void split_input(instruction* instruction_array) {
     for(int i = 0; i < numinstructions;i++) {
         char* instruction = instruction_array[i].instruction;
         char* split;
-        //pull out name of instruction first
-        split=strtok(instruction, " ");
-        printf("Name is %s\n",split);
+        printf("PC is %d\n", instruction_array[i].pc);
+        //pull out name of instruction first, this is for when no labels are on the current line.
+        if(checkForLabels(instruction_array[i])==0) {
+            split=strtok(instruction, " ");
+            printf("Name is %s\n",split);
+        }
+        else if(checkForLabels(instruction_array[i])==1) {
+            //this means that it is a label on its own line, so we will continue with the loop as there are no more instructions on the line.
+            printf("Label found = %s\n", instruction_array[i].label);
+            continue;
+        }
+        else {
+            //otherwise, there is a label on the current line, so we already started splitting the instruction with strtok in scan_for_labels, so we continue
+            //If we already parsed a label on this line
+            split = strtok(instruction, " ");
+            //skip past the first label, to get to instruction
+            split = strtok(NULL, " ");
+            printf("Name is %s, label that was found is %s\n",split, instruction_array[i].label);
+        }
         //loop through the above array of possibilities to try and find a match in that array
         for(int maps = 0; maps < sizeof(mappings)/sizeof(mappings[0]);maps++) {
             if(strncmp(mappings[maps].name,split,strlen(mappings[maps].name))==0 && strlen(split)==strlen(mappings[maps].name)) {
@@ -455,14 +474,16 @@ void split_input(instruction* instruction_array) {
             instruction_array[i] = s_processing(instruction_array[i],split);
         }
         else if(instruction_array[i].type == 'B') {
-            instruction_array[i] = b_processing(instruction_array[i],split);
+            instruction_array[i] = b_processing(instruction_array, instruction_array[i],split);
         }
+        printf("\n\n");
     }
 }
 
 void cleanup_program(instruction* instruction_array) {
     for(int i = 0; i < maxfilesize; i++) {
         free(instruction_array[i].instruction);
+        free(instruction_array[i].label);
     }
     free(instruction_array);
     instruction_array=NULL;
@@ -471,11 +492,65 @@ void cleanup_program(instruction* instruction_array) {
 //for wes to implement, filename stored in prog_file add counter to get number of instructions, stored in numinstructions
 void load_program(instruction* instruction_array) {
     numinstructions = 3;
-    strcpy(instruction_array[0].instruction,"beq x10, x15, 5647\0");
-    strcpy(instruction_array[1].instruction,"lh x11, 30(x29)\0");
-    strcpy(instruction_array[2].instruction,"sb x12, 63(x19)\0");
+    strcpy(instruction_array[0].instruction,"beq x12, x15, Label\0");
+    strcpy(instruction_array[1].instruction,"sb x17, 10(x20)\0");
+    strcpy(instruction_array[2].instruction,"Label: sb x17, 10(x20)\0");
+    uint32_t pc = 0;
+    for(int i = 0; i<numinstructions;i++) {
+        //check for labels on their own line and increment accordingly. Labels on their own line should point to the next instruction.
+        if(checkForLabels(instruction_array[i])!=1) {
+            instruction_array[i].pc = pc;
+        }
+        else{
+            //if label found is on it's own line, increment it's pc to point to next instruction.
+            instruction_array[i].pc = pc;
+            continue;
+        }        
+        pc += 4;
+    }
 }
-
+//This function checks to see if the current instruction has a label attached to it, so it can be tracked
+//return type of 1 indicates a label on it's own line, return type of 2 indicates label attached to instruction, return type of 0 means no label.
+int checkForLabels(instruction i) {
+    char* instscan = i.instruction;
+    while(*instscan != '\0') {
+        if(*instscan == ':') {
+            if(*(instscan + 1) == '\0') {
+                return 1;
+            }
+            return 2;
+        }
+        instscan++;
+    }
+    return 0;
+}
+void scan_for_labels(instruction* instruction_array) {
+    for(int i = 0; i < numinstructions; i++) {
+        if(checkForLabels(instruction_array[i])) {
+            //if label was found, catalog it and have instruction skip past it on the current line.
+            char* instructiondupe = malloc(sizeof(char)*strlen(instruction_array[i].instruction));
+            strncpy(instructiondupe,instruction_array[i].instruction,strlen(instruction_array[i].instruction));
+            char* split;
+            //pull out name of instruction first
+            split=strtok(instructiondupe, ": ");
+            strncpy(instruction_array[i].label,split,strlen(instructiondupe));
+            free(instructiondupe);
+        }
+    }
+}
+uint32_t calculateLabelOffset(instruction* instruction_array, uint32_t currentPC, char* label) {
+    //need to loop through array until we find the given label
+    for(int i = 0; i< numinstructions;i++) {
+        printf("Current label is %s, search label is %s\n", instruction_array[i].label, label);
+        if(strncmp(instruction_array[i].label,label,strlen(label))==0) {
+            //if label found at current position, we can now calculate offset.
+            printf("Label found! label pc = %d, currentPC = %d\n", instruction_array[i].pc, currentPC);
+            return instruction_array[i].pc - currentPC;
+        }
+    }
+    //if label wasn't found, there was some type of error, so we return an offset of 0 to indicate this
+    return 0;
+}
 instruction* initalize_program() {
     instruction* inst_array = malloc(maxfilesize*sizeof(instruction));
     for(int i = 0; i < maxfilesize; i++ ) {
@@ -494,7 +569,9 @@ instruction* initalize_program() {
         inst_array[i].type = 0;
         inst_array[i].imm11_5 = 0;
         inst_array[i].imm31_12 = 0;
-
+        inst_array[i].pc = 0;
+        inst_array[i].label = malloc(maxinstsize*sizeof(char));
+        memset(inst_array[i].label,0,maxinstsize);
     }
     return inst_array;
 }
@@ -507,6 +584,7 @@ int main(int argc, char*argv[]) {
     strcpy(prog_file,argv[1]);
     instruction* instruction_array = initalize_program();
     load_program(instruction_array);
+    scan_for_labels(instruction_array);
     split_input(instruction_array);
     cleanup_program(instruction_array);
 }
