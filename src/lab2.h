@@ -37,7 +37,7 @@ int checkForLabels(instruction i);
 //calculate label offsett used for branching instructions. Accepts list of instructions, current instruction's PC & Label trying to reach. Returns imm offset needed for instructions.
 uint32_t calculateLabelOffset(instruction* instruction_array, uint32_t currentPC, char* label);
 //R-type
-instruction r_processing(instruction i, char*split);
+instruction r_processing(instruction i, char*split, FILE* fp);
 instruction add_processing(instruction i);
 instruction sub_processing(instruction i);
 instruction xor_processing(instruction i);
@@ -49,7 +49,7 @@ instruction sra_processing(instruction i);
 instruction slt_processing(instruction i);
 instruction sltu_processing(instruction i);
 //I-im
-instruction iim_processing(instruction i, char*split);
+instruction iim_processing(instruction i, char*split, FILE* fp);
 instruction addi_processing(instruction i);
 instruction xori_processing(instruction i);
 instruction ori_processing(instruction i);
@@ -60,19 +60,19 @@ instruction srai_processing(instruction i);
 instruction slti_processing(instruction i);
 instruction sltiu_processing(instruction i);
 //I-load
-instruction ild_processing(instruction i, char*split);
+instruction ild_processing(instruction i, char*split, FILE* fp);
 instruction lb_processing(instruction i);
 instruction lh_processing(instruction i);
 instruction lw_processing(instruction i);
 instruction lbu_processing(instruction i);
 instruction lhu_processing(instruction i);
 //S-type
-instruction s_processing(instruction i, char* split);
+instruction s_processing(instruction i, char* split, FILE* fp);
 instruction sb_processing(instruction i);
 instruction sh_processing(instruction i);
 instruction sw_processing(instruction i);
 //b-type
-instruction b_processing(instruction* instruction_array, instruction i, char* split);
+instruction b_processing(instruction* instruction_array, instruction i, char* split, FILE* fp);
 instruction beq_processing(instruction i);
 instruction bne_processing(instruction i);
 instruction blt_processing(instruction i);
@@ -80,12 +80,15 @@ instruction bge_processing(instruction i);
 instruction bltu_processing(instruction i);
 instruction bgeu_processing(instruction i);
 //jump
+instruction j_processing(instruction* instruction_array, instruction i, char* split, FILE* fp);
 instruction jal_processing(instruction i);
 instruction jalr_processing(instruction i);
 //u-type
+instruction u_processing(instruction i, char* split, FILE* fp);
 instruction lui_processing(instruction i);
 instruction auipc_processing(instruction i);
-
+//ecall
+void ecall_encoding(instruction i, FILE* fp);
 instruction ecall_processing(instruction i);
 //array for all possible assembly names and their processing function as a function pointer
 InstructionMapping mappings[] = {

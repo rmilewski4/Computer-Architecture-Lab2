@@ -2,7 +2,7 @@
 //TODO: create rest of Iload-processing,S,etc. to handle all register operations
 //follow how the r instructions are implemented.
 //finally create functions that create the machine code number.
-instruction r_processing(instruction i, char*split) {
+instruction r_processing(instruction i, char*split, FILE* fp) {
     //pull out rd
     split = strtok(NULL, ",");
     if(strncmp(split,"zero",4)==0) {
@@ -34,10 +34,18 @@ instruction r_processing(instruction i, char*split) {
         uint32_t rs2 = strtol(split,NULL,10);
         i.rs2 = rs2;
     }
+    uint32_t shiftedrd = i.rd << 7;
+    uint32_t shiftedfunct3 = i.funct3 << 12;
+    uint32_t shiftedrs1 = i.rs1 << 15;
+    uint32_t shiftedrs2 = i.rs2 << 20;
+    uint32_t shiftedfunct7 = i.funct7 << 25;
+    uint32_t fullinstruction = i.opcode | shiftedrd | shiftedfunct3 | shiftedrs1 | shiftedrs2 | shiftedfunct7;
+    printf(" instruction encoded is : %x\n", fullinstruction);
+    fprintf(fp,"%x\n", fullinstruction);
     printf("rd = %d, rs1 = %d, rs2 = %d\n",i.rd,i.rs1,i.rs2);
     return i;
 }
-instruction iim_processing(instruction i, char*split) {
+instruction iim_processing(instruction i, char*split, FILE* fp) {
 //pull out rd
     split = strtok(NULL, ",");
     if(strncmp(split,"zero",4)==0) {
@@ -73,10 +81,17 @@ instruction iim_processing(instruction i, char*split) {
     else {
         i.imm11_0 = imm;
     }
+    uint32_t shiftedrd = i.rd << 7;
+    uint32_t shiftedfunct3 = i.funct3 << 12;
+    uint32_t shiftedrs1 = i.rs1 << 15;
+    uint32_t shiftedimm11_0 = i.imm11_0 << 20;
+    uint32_t fullinstruction = i.opcode | shiftedrd | shiftedfunct3 | shiftedrs1 | shiftedimm11_0;
+    printf(" instruction encoded is : %x\n", fullinstruction);
+    fprintf(fp,"%x\n", fullinstruction);
     printf("rd = %d, rs1 = %d, imm = %d\n",i.rd,i.rs1,i.imm11_0);
     return i;
 }
-instruction ild_processing(instruction i, char*split) {
+instruction ild_processing(instruction i, char*split, FILE* fp) {
     //pull out rd
     split = strtok(NULL, ", ");
     if(strncmp(split,"zero",4)==0) {
@@ -97,10 +112,17 @@ instruction ild_processing(instruction i, char*split) {
     split++;
     uint32_t rs1 = strtol(split, NULL, 10);
     i.rs1 = rs1;
+    uint32_t shiftedrd = i.rd << 7;
+    uint32_t shiftedfunct3 = i.funct3 << 12;
+    uint32_t shiftedrs1 = i.rs1 << 15;
+    uint32_t shiftedimm11_0 = i.imm11_0 << 20;
+    uint32_t fullinstruction = i.opcode | shiftedrd | shiftedfunct3 | shiftedrs1 | shiftedimm11_0;
+    printf(" instruction encoded is : %x\n", fullinstruction);
+    fprintf(fp,"%x\n", fullinstruction);
     printf("rd = %d, imm = %d, rs1 = %d\n",i.rd,i.imm11_0,i.rs1);
     return i;
 }
-instruction s_processing(instruction i, char* split) {
+instruction s_processing(instruction i, char* split, FILE* fp) {
     //pull out rs2
     split = strtok(NULL, ", ");
     if(strncmp(split,"zero",4)==0) {
@@ -130,10 +152,18 @@ instruction s_processing(instruction i, char* split) {
         uint32_t rs1 = strtol(split,NULL,10);
         i.rs1 = rs1;
     }
+    uint32_t shiftedrd = i.rd << 7;
+    uint32_t shiftedfunct3 = i.funct3 << 12;
+    uint32_t shiftedrs1 = i.rs1 << 15;
+    uint32_t shiftedrs2 = i.rs2 << 20;
+    uint32_t shiftedimm11_5 = i.imm11_5 << 25;
+    uint32_t fullinstruction = i.opcode | shiftedrd | shiftedfunct3 | shiftedrs1 | shiftedrs2 | shiftedimm11_5;
+    printf(" instruction encoded is : %x\n", fullinstruction);
+    fprintf(fp,"%x\n", fullinstruction);
     printf("rs2 = %d, imm = %d, imm0_4 = %d, imm11_5 = %d, rs1 = %d\n",i.rd,imm, i.imm4_0,i.imm11_5,i.rs1);
     return i;
 }
-instruction b_processing(instruction* instruction_array, instruction i, char* split) {
+instruction b_processing(instruction* instruction_array, instruction i, char* split, FILE* fp) {
     //pull out rs1
     split = strtok(NULL, ",");
     if(strncmp(split,"zero",4)==0) {
@@ -160,7 +190,6 @@ instruction b_processing(instruction* instruction_array, instruction i, char* sp
     uint32_t imm = 0;
     //if not a digit, must be a label, so calculate address
     if(!isdigit(split[0])) {
-        //TODO: CALCULATE LABEL ADDRESSES
         imm = calculateLabelOffset(instruction_array,i.pc,split);
     }
     else {
@@ -178,9 +207,82 @@ instruction b_processing(instruction* instruction_array, instruction i, char* sp
     uint32_t bit12 = (imm & bit12mask) >> 1;
     uint32_t bits10to5mask = 2016;
     uint32_t imm10to5 = imm & bits10to5mask;
-    i.imm12and10_5 = imm10to5 | bit12;
+    i.imm12and10_5 = (imm10to5 | bit12) >> 5;
+    uint32_t shiftedfunct3 = i.funct3 << 12;
+    uint32_t shiftedrs1 = i.rs1 << 15;
+    uint32_t shiftedrs2 = i.rs2 << 20;
+    uint32_t shiftedimm4_1and11 = i.imm4_1and11 << 7;
+    uint32_t shiftedimm12and10_5 = i.imm12and10_5 << 25;
+    uint32_t fullinstruction = i.opcode | shiftedimm4_1and11 | shiftedfunct3 | shiftedrs1 | shiftedrs2 | shiftedimm12and10_5;
+    printf(" instruction encoded is : %x\n", fullinstruction);
+    fprintf(fp,"%x\n", fullinstruction);
     printf("rs1 = %d, rs2 = %d, imm4:1|11 = %d, imm12|10:5 = %d\n",i.rs1,i.rs2,i.imm4_1and11, i.imm12and10_5);
     return i;
+}
+instruction j_processing(instruction* instruction_array, instruction i, char* split, FILE* fp) {
+    //pull out rd
+    split = strtok(NULL, ",");
+    if(strncmp(split,"zero",4)==0) {
+        i.rd = 0;
+    }
+    else {
+        //skip past the x character in register names
+        split++;
+        uint32_t rd = strtol(split,NULL,10);
+        i.rd = rd;
+    }
+    //pull out imm/label
+    split = strtok(NULL,", ");
+    uint32_t imm = 0;
+    //if not a digit, must be a label, so calculate address
+    if(!isdigit(split[0])) {
+        imm = calculateLabelOffset(instruction_array,i.pc,split);
+    }
+    else {
+        imm = strtol(split,NULL,10);
+    }
+    //encode the immediate as specified by instruction specification
+    printf("IMM in branch is %d\n", imm);
+    uint32_t imm19to12 = (imm & 0xFF000) >> 12;
+    uint32_t bit11mask = 2048;
+    uint32_t bit11 = (imm & bit11mask) >> 3;
+    uint32_t bit10to1 = (imm & 2046) << 8;
+    uint32_t bit20 = (imm & 1048576) >> 1;
+    i.imm31_12 = imm19to12 | bit10to1 | bit11 | bit20;
+    uint32_t shiftedrd = i.rd << 7;
+    uint32_t shifted20and10_1and11and19_12 = i.imm31_12 << 12;
+    uint32_t fullinstruction = i.opcode | shiftedrd | shifted20and10_1and11and19_12;
+    printf(" instruction encoded is : %x\n", fullinstruction);
+    fprintf(fp,"%x\n", fullinstruction);
+    return i;
+}
+instruction u_processing(instruction i, char* split, FILE* fp) {
+    //pull out rd
+    split = strtok(NULL, ",");
+    if(strncmp(split,"zero",4)==0) {
+        i.rd = 0;
+    }
+    else {
+        //skip past the x character in register names
+        split++;
+        uint32_t rd = strtol(split,NULL,10);
+        i.rd = rd;
+    }
+    split = strtok(NULL,", ");
+    uint32_t imm = 0;
+    imm = strtol(split, NULL, 10);
+    //Only use bits 31-12 as specified. 
+    imm = (imm & 0xFFFFF000) >> 12;
+    i.imm31_12 = imm;
+    uint32_t shiftedrd = i.rd << 7;
+    uint32_t shifted31_12 = i.imm31_12 << 12;
+    uint32_t fullinstruction = i.opcode | shiftedrd | shifted31_12;
+    printf(" instruction encoded is : %x\n", fullinstruction);
+    fprintf(fp,"%x\n", fullinstruction);
+    return i;
+}
+void ecall_encoding(instruction i, FILE* fp) {
+    fprintf(fp, "%x\n", i.opcode);
 }
 instruction add_processing(instruction i) {
     i.type = 'R';
@@ -429,6 +531,8 @@ instruction ecall_processing(instruction i) {
     return i;
 }
 void split_input(instruction* instruction_array) {
+    FILE* fp = NULL;
+    fp = fopen("output.txt", "w");
     //loop through all instructoins
     for(int i = 0; i < numinstructions;i++) {
         char* instruction = instruction_array[i].instruction;
@@ -461,23 +565,38 @@ void split_input(instruction* instruction_array) {
                 break;
             }
         }
+        if(instruction_array[i].opcode == 0) {
+            printf("Malformed instruction! Please check your instruction and reformat if needed\n");
+            continue;
+        }
         if(instruction_array[i].type == 'R') {
-            instruction_array[i] = r_processing(instruction_array[i],split);
+            instruction_array[i] = r_processing(instruction_array[i],split, fp);
         }
         else if(instruction_array[i].type == 'I' && instruction_array[i].opcode == 19) {
-            instruction_array[i] = iim_processing(instruction_array[i],split);
+            instruction_array[i] = iim_processing(instruction_array[i],split, fp);
         }
+        //dealing with i-load and jalr
         else if(instruction_array[i].type == 'I' && (instruction_array[i].opcode == 3 || instruction_array[i].opcode == 103)) {
-            instruction_array[i] = ild_processing(instruction_array[i],split);
+            instruction_array[i] = ild_processing(instruction_array[i],split, fp);
         }
         else if(instruction_array[i].type == 'S') {
-            instruction_array[i] = s_processing(instruction_array[i],split);
+            instruction_array[i] = s_processing(instruction_array[i],split, fp);
         }
         else if(instruction_array[i].type == 'B') {
-            instruction_array[i] = b_processing(instruction_array, instruction_array[i],split);
+            instruction_array[i] = b_processing(instruction_array, instruction_array[i],split, fp);
+        }
+        else if(instruction_array[i].type == 'J') {
+            instruction_array[i] = j_processing(instruction_array,instruction_array[i],split, fp);
+        }
+        else if(instruction_array[i].type == 'U') {
+            instruction_array[i] = u_processing(instruction_array[i],split, fp);
+        }
+        else if(instruction_array[i].opcode == 115) {
+
         }
         printf("\n\n");
     }
+    fclose(fp);
 }
 
 void cleanup_program(instruction* instruction_array) {
@@ -492,9 +611,9 @@ void cleanup_program(instruction* instruction_array) {
 //for wes to implement, filename stored in prog_file add counter to get number of instructions, stored in numinstructions
 void load_program(instruction* instruction_array) {
     numinstructions = 3;
-    strcpy(instruction_array[0].instruction,"beq x12, x15, Label\0");
-    strcpy(instruction_array[1].instruction,"sb x17, 10(x20)\0");
-    strcpy(instruction_array[2].instruction,"Label: sb x17, 10(x20)\0");
+    strcpy(instruction_array[0].instruction,"Label:\0");
+    strcpy(instruction_array[1].instruction,"add x18, x19, x20\0");
+    strcpy(instruction_array[2].instruction,"beq x12, x15, Label\0");
     uint32_t pc = 0;
     for(int i = 0; i<numinstructions;i++) {
         //check for labels on their own line and increment accordingly. Labels on their own line should point to the next instruction.
