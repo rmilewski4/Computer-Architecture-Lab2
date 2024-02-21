@@ -1,7 +1,6 @@
 #include "lab2.h"
-//TODO: create rest of Iload-processing,S,etc. to handle all register operations
-//follow how the r instructions are implemented.
-//finally create functions that create the machine code number.
+
+
 instruction r_processing(instruction i, char*split, FILE* fp) {
     //pull out rd
     split = strtok(NULL, ",");
@@ -40,8 +39,8 @@ instruction r_processing(instruction i, char*split, FILE* fp) {
     uint32_t shiftedrs2 = i.rs2 << 20;
     uint32_t shiftedfunct7 = i.funct7 << 25;
     uint32_t fullinstruction = i.opcode | shiftedrd | shiftedfunct3 | shiftedrs1 | shiftedrs2 | shiftedfunct7;
-    printf(" instruction encoded is : %x\n", fullinstruction);
-    fprintf(fp,"%x\n", fullinstruction);
+    printf(" instruction encoded is : %08x\n", fullinstruction);
+    fprintf(fp,"%08x\n", fullinstruction);
     printf("rd = %d, rs1 = %d, rs2 = %d\n",i.rd,i.rs1,i.rs2);
     return i;
 }
@@ -86,8 +85,8 @@ instruction iim_processing(instruction i, char*split, FILE* fp) {
     uint32_t shiftedrs1 = i.rs1 << 15;
     uint32_t shiftedimm11_0 = i.imm11_0 << 20;
     uint32_t fullinstruction = i.opcode | shiftedrd | shiftedfunct3 | shiftedrs1 | shiftedimm11_0;
-    printf(" instruction encoded is : %x\n", fullinstruction);
-    fprintf(fp,"%x\n", fullinstruction);
+    printf("instruction encoded is : %08x\n", fullinstruction);
+    fprintf(fp,"%08x\n", fullinstruction);
     printf("rd = %d, rs1 = %d, imm = %d\n",i.rd,i.rs1,i.imm11_0);
     return i;
 }
@@ -609,24 +608,22 @@ void cleanup_program(instruction* instruction_array) {
 }
 
 uint32_t countCharactersInLine(FILE * fp, size_t offset){
-    fseek(fp, offset, SEEK_SET);
+    fseek(fp, offset, SEEK_SET); // go to start of instruction
     //printf("offset is %lld\n\n", offset);
     uint32_t charCount = 1;
     
     int ch = ' ';
 
-    while((ch = getc(fp)) != EOF){
+    while((ch = getc(fp)) != EOF){ // while not at end of file
         charCount++;
         //printf("%c", ch);
         if(ch == '\n'){
-            //printf("\n");
-            //printf("%c char is ", ch);
             break;
             
         }
     }
 
-    fseek(fp, offset, SEEK_SET);
+    fseek(fp, offset, SEEK_SET); // go back to start of instruction
     //printf("charCount is %d\n", charCount);
     return charCount;
 }
@@ -682,7 +679,7 @@ void load_program(instruction* instruction_array, char * prog_file) {
     for (uint32_t i = 0; i < numinstructions; i++) {
         fgets(instruction_array[i].instruction, lineCharacterArray[i] + 1, fp);
         instruction_array[i].instruction[lineCharacterArray[i]] = '\0';
-        printf("Instruction %d: %s\n", i + 1, instruction_array[i].instruction);
+        //printf("Instruction %d: %s\n", i + 1, instruction_array[i].instruction);
     }
 
     // numinstructions = 3;
