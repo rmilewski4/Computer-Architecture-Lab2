@@ -116,8 +116,8 @@ instruction ild_processing(instruction i, char*split, FILE* fp) {
     uint32_t shiftedrs1 = i.rs1 << 15;
     uint32_t shiftedimm11_0 = i.imm11_0 << 20;
     uint32_t fullinstruction = i.opcode | shiftedrd | shiftedfunct3 | shiftedrs1 | shiftedimm11_0;
-    printf(" instruction encoded is : %x\n", fullinstruction);
-    fprintf(fp,"%x\n", fullinstruction);
+    printf(" instruction encoded is : %08x\n", fullinstruction);
+    fprintf(fp,"%08x\n", fullinstruction);
     printf("rd = %d, imm = %d, rs1 = %d\n",i.rd,i.imm11_0,i.rs1);
     return i;
 }
@@ -157,8 +157,8 @@ instruction s_processing(instruction i, char* split, FILE* fp) {
     uint32_t shiftedrs2 = i.rs2 << 20;
     uint32_t shiftedimm11_5 = i.imm11_5 << 25;
     uint32_t fullinstruction = i.opcode | shiftedrd | shiftedfunct3 | shiftedrs1 | shiftedrs2 | shiftedimm11_5;
-    printf(" instruction encoded is : %x\n", fullinstruction);
-    fprintf(fp,"%x\n", fullinstruction);
+    printf(" instruction encoded is : %08x\n", fullinstruction);
+    fprintf(fp,"%08x\n", fullinstruction);
     printf("rs2 = %d, imm = %d, imm0_4 = %d, imm11_5 = %d, rs1 = %d\n",i.rd,imm, i.imm4_0,i.imm11_5,i.rs1);
     return i;
 }
@@ -213,8 +213,8 @@ instruction b_processing(instruction* instruction_array, instruction i, char* sp
     uint32_t shiftedimm4_1and11 = i.imm4_1and11 << 7;
     uint32_t shiftedimm12and10_5 = i.imm12and10_5 << 25;
     uint32_t fullinstruction = i.opcode | shiftedimm4_1and11 | shiftedfunct3 | shiftedrs1 | shiftedrs2 | shiftedimm12and10_5;
-    printf(" instruction encoded is : %x\n", fullinstruction);
-    fprintf(fp,"%x\n", fullinstruction);
+    printf(" instruction encoded is : %08x\n", fullinstruction);
+    fprintf(fp,"%08x\n", fullinstruction);
     printf("rs1 = %d, rs2 = %d, imm4:1|11 = %d, imm12|10:5 = %d\n",i.rs1,i.rs2,i.imm4_1and11, i.imm12and10_5);
     return i;
 }
@@ -251,8 +251,8 @@ instruction j_processing(instruction* instruction_array, instruction i, char* sp
     uint32_t shiftedrd = i.rd << 7;
     uint32_t shifted20and10_1and11and19_12 = i.imm31_12 << 12;
     uint32_t fullinstruction = i.opcode | shiftedrd | shifted20and10_1and11and19_12;
-    printf(" instruction encoded is : %x\n", fullinstruction);
-    fprintf(fp,"%x\n", fullinstruction);
+    printf(" instruction encoded is : %08x\n", fullinstruction);
+    fprintf(fp,"%08x\n", fullinstruction);
     return i;
 }
 instruction u_processing(instruction i, char* split, FILE* fp) {
@@ -276,12 +276,12 @@ instruction u_processing(instruction i, char* split, FILE* fp) {
     uint32_t shiftedrd = i.rd << 7;
     uint32_t shifted31_12 = i.imm31_12 << 12;
     uint32_t fullinstruction = i.opcode | shiftedrd | shifted31_12;
-    printf(" instruction encoded is : %x\n", fullinstruction);
-    fprintf(fp,"%x\n", fullinstruction);
+    printf(" instruction encoded is : %08x\n", fullinstruction);
+    fprintf(fp,"%08x\n", fullinstruction);
     return i;
 }
 void ecall_encoding(instruction i, FILE* fp) {
-    fprintf(fp, "%x\n", i.opcode);
+    fprintf(fp, "%08x\n", i.opcode);
 }
 instruction add_processing(instruction i) {
     i.type = 'R';
