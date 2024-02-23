@@ -1,3 +1,3 @@
-add x10, zero, x0
-add x11, zero, x0 
-addi x12, zero, 20
+Label:
+add x18, x19, x20
+beq x12, x15, Label

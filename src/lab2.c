@@ -616,12 +616,12 @@ uint32_t countCharactersInLine(FILE * fp, size_t offset){
     int ch = ' ';
 
     while((ch = getc(fp)) != EOF){ // while not at end of file
-        charCount++;
         //printf("%c", ch);
         if(ch == '\n'){
             break;
             
         }
+        charCount++;
     }
 
     fseek(fp, offset, SEEK_SET); // go back to start of instruction
@@ -662,7 +662,7 @@ void load_program(instruction* instruction_array, char * prog_file) {
     //count line characters, put them in array
     size_t offset = 0;
     lineCharacterArray[0] = countCharactersInLine(fp, offset);
-    
+    //printf("linecharacters for instruction %d IS %d\n\n\n", 1,  lineCharacterArray[0]);
     for(uint32_t i = 1; i < numinstructions; i++){
         offset += lineCharacterArray[i - 1];
         lineCharacterArray[i] = countCharactersInLine(fp, offset);
@@ -679,14 +679,17 @@ void load_program(instruction* instruction_array, char * prog_file) {
     //create str array for each instruction
     for (uint32_t i = 0; i < numinstructions; i++) {
         fgets(instruction_array[i].instruction, lineCharacterArray[i] + 1, fp);
+        for(int z = 0; z < lineCharacterArray[i]; z++) {
+            //if a newline was found in an instruction, replace it with a null terminator
+            if(instruction_array[i].instruction[z] == '\n') {
+                instruction_array[i].instruction[z] = '\0';
+            }
+        }
+        //This null terminator being added covers the EOF case
         instruction_array[i].instruction[lineCharacterArray[i]] = '\0';
-        //printf("Instruction %d: %s\n", i + 1, instruction_array[i].instruction);
+        //printf("Instruction %d: %slasdf\n", i + 1, instruction_array[i].instruction);
     }
 
-    // numinstructions = 3;
-    // strcpy(instruction_array[0].instruction,"Label:\0");
-    // strcpy(instruction_array[1].instruction,"add x18, x19, x20\0");
-    // strcpy(instruction_array[2].instruction,"beq x12, x15, Label\0");
     uint32_t pc = 0;
     for(uint32_t i = 0; i<numinstructions;i++) {
         //check for labels on their own line and increment accordingly. Labels on their own line should point to the next instruction.
@@ -700,7 +703,7 @@ void load_program(instruction* instruction_array, char * prog_file) {
         }        
         pc += 4;
     }
-    
+    free(lineCharacterArray);
     fclose(fp);
 }
 //This function checks to see if the current instruction has a label attached to it, so it can be tracked
@@ -781,10 +784,10 @@ int main(int argc, char*argv[]) {
     char * prog_file = malloc(strlen(argv[1]) + 1); // file length
     strcpy(prog_file,argv[1]);
     instruction* instruction_array = initalize_program();
-
     load_program(instruction_array, prog_file);
 
     scan_for_labels(instruction_array);
     split_input(instruction_array);
     cleanup_program(instruction_array);
+    free(prog_file);
 }
