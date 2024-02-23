@@ -592,7 +592,7 @@ void split_input(instruction* instruction_array) {
             instruction_array[i] = u_processing(instruction_array[i],split, fp);
         }
         else if(instruction_array[i].opcode == 115) {
-
+            ecall_encoding(instruction_array[i], fp);
         }
         printf("\n\n");
     }
