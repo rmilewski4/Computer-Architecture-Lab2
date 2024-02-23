@@ -4,9 +4,9 @@
 #include <stdint.h>
 #include <assert.h>
 #include <ctype.h>
+uint32_t numinstructions = 0;
 int maxfilesize = 50;
 int maxinstsize = 255;
-uint32_t numinstructions = 0;
 typedef struct instruction_array_struct {
     char* instruction;
     //Should hold type (i.e. R, I, S, etc.)

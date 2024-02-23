@@ -1,6 +1,7 @@
 #include "lab2.h"
 
 
+
 instruction r_processing(instruction i, char*split, FILE* fp) {
     //pull out rd
     split = strtok(NULL, ",");
@@ -771,17 +772,18 @@ instruction* initalize_program() {
     }
     return inst_array;
 }
-
 int main(int argc, char*argv[]) {
 	if (argc < 2) {
 		printf("Error: You should provide input file.\nUsage: %s <input program> \n\n",  argv[0]);
 		exit(1);
 	}
+
     char * prog_file = malloc(strlen(argv[1]) + 1); // file length
     strcpy(prog_file,argv[1]);
     instruction* instruction_array = initalize_program();
 
     load_program(instruction_array, prog_file);
+
     scan_for_labels(instruction_array);
     split_input(instruction_array);
     cleanup_program(instruction_array);
