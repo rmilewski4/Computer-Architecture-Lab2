@@ -4,10 +4,9 @@
 #include <stdint.h>
 #include <assert.h>
 #include <ctype.h>
-char prog_file[32];
+uint32_t numinstructions = 0;
 int maxfilesize = 50;
 int maxinstsize = 255;
-int numinstructions = 0;
 typedef struct instruction_array_struct {
     char* instruction;
     //Should hold type (i.e. R, I, S, etc.)
@@ -133,8 +132,15 @@ InstructionMapping mappings[] = {
 };
 //takes in the instructionarray with instruction already loaded and determines opcode and rest of registers.
 void split_input(instruction* instructionarray);
+
+//counts number of lines in file
+uint32_t countFileLines(FILE * fp);
+
+//count number of characters in line
+uint32_t countCharactersInLine(FILE * fp, size_t offset);
+
 //Read in input from prog_file and store into memory array.
-void load_program(instruction* instruction_array);
+void load_program(instruction* instruction_array, char * prog_file);
 
 //Needed to initalize array to store instructions
 instruction* initalize_program();
