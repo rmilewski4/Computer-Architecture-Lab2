@@ -678,7 +678,12 @@ void load_program(instruction* instruction_array, char * prog_file) {
     fseek(fp, 0, SEEK_SET); //back to start of file again
     //create str array for each instruction
     for (uint32_t i = 0; i < numinstructions; i++) {
-        fgets(instruction_array[i].instruction, lineCharacterArray[i] + 1, fp);
+        char* output = fgets(instruction_array[i].instruction, lineCharacterArray[i] + 1, fp);
+        if(output == NULL) {
+            printf("an error occured reading the file!\nExiting!\n");
+            free(lineCharacterArray);
+            return;
+        }
         for(int z = 0; z < lineCharacterArray[i]; z++) {
             //if a newline was found in an instruction, replace it with a null terminator
             if(instruction_array[i].instruction[z] == '\n') {
