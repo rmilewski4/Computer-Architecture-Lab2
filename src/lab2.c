@@ -292,6 +292,12 @@ instruction u_processing(instruction i, char* split, FILE* fp) {
 void ecall_encoding(instruction i, FILE* fp) {
     fprintf(fp, "%08x\n", i.opcode);
 }
+void ebreak_encoding(instruction i, FILE* fp) {
+    //ebreak takes the opcode + an immediate of 1 so that is shifted to it's spot
+    uint32_t shiftedimm11_0 = i.imm11_0 << 20;
+    uint32_t fullinstruction = i.opcode | shiftedimm11_0;
+    fprintf(fp,"%08x\n", fullinstruction);
+}
 //The below functions fill in the type field, opcode, funct3 & 7 (if needed) and any immediates (if needed)
 instruction add_processing(instruction i) {
     i.type = 'R';
@@ -539,6 +545,13 @@ instruction ecall_processing(instruction i) {
     i.funct3 = 0;
     return i;
 }
+instruction ebreak_processing(instruction i) {
+    i.type = 'I';
+    i.opcode = 115;
+    i.funct3 = 0;
+    i.imm11_0 = 1;
+    return i;
+}
 //Function that is used to split up the input of the given asm instructions
 void split_input(instruction* instruction_array) {
     FILE* fp = NULL;
@@ -600,9 +613,12 @@ void split_input(instruction* instruction_array) {
         else if(instruction_array[i].type == 'U') {
             instruction_array[i] = u_processing(instruction_array[i],split, fp);
         }
-        //opcode of 115 indicates ecall so that is how it is processed
-        else if(instruction_array[i].opcode == 115) {
+        //opcode of 115  && imm of 0 indicates ecall so that is how it is processed
+        else if(instruction_array[i].opcode == 115 && instruction_array[i].imm11_0 == 0) {
             ecall_encoding(instruction_array[i], fp);
+        }
+        else if(instruction_array[i].opcode == 115 && instruction_array[i].imm11_0 == 1) {
+            ebreak_encoding(instruction_array[i], fp);
         }
     }
     //close file when done

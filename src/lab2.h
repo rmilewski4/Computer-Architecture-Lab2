@@ -90,6 +90,9 @@ instruction auipc_processing(instruction i);
 //ecall
 void ecall_encoding(instruction i, FILE* fp);
 instruction ecall_processing(instruction i);
+//ebreak
+void ebreak_encoding(instruction i, FILE* fp);
+instruction ebreak_processing(instruction i);
 //array for all possible assembly names and their processing function as a function pointer
 InstructionMapping mappings[] = {
         {"add", add_processing},
@@ -129,7 +132,8 @@ InstructionMapping mappings[] = {
         {"jalr", jalr_processing},
         {"lui", lui_processing},
         {"auipc", auipc_processing},
-        {"ecall", ecall_processing}
+        {"ecall", ecall_processing},
+        {"ebreak", ebreak_processing}
 };
 //takes in the instructionarray with instruction already loaded and determines opcode and rest of registers.
 void split_input(instruction* instructionarray);
