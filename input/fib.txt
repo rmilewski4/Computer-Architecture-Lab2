@@ -6,8 +6,8 @@ addi x5, zero 0
 LOOP:
 beq x30, x31, DONE 
 add x5, x28, x29
-ori x28, x29, 0
-ori x29, x5, 0
+addi x28, x29, 0
+addi x29, x5, 0
 addi x31, x31, 1
 beq x0, x0, LOOP
 DONE:

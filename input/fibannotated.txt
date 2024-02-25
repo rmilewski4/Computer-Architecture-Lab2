@@ -6,8 +6,8 @@ addi x5, zero 0    #result
 LOOP:
 beq x30, x31, DONE 
 add x5, x28, x29 #get next element of fib sequence
-ori x28, x29, 0 #move n-1 element into n-2 spot
-ori x29, x5, 0 #move sum that was just done into n-1 spot
+addi x28, x29, 0 #move n-1 element into n-2 spot
+addi x29, x5, 0 #move sum that was just done into n-1 spot
 addi x31, x31, 1 # add 1 to counter
 beq x0, x0, LOOP
 DONE:

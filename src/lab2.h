@@ -7,6 +7,7 @@
 uint32_t numinstructions = 0;
 int maxfilesize = 50;
 int maxinstsize = 255;
+//struct used to hold data about each instruction and any possible field in use
 typedef struct instruction_array_struct {
     char* instruction;
     //Should hold type (i.e. R, I, S, etc.)
@@ -26,14 +27,14 @@ typedef struct instruction_array_struct {
     uint32_t imm11_5;
     uint32_t imm31_12;
 } instruction;  
-
+//struct used to map all processing functions
 typedef struct {
     char* name;
     instruction (*processing_func)(instruction);
 } InstructionMapping;
 void scan_for_labels(instruction* instruction_array);
 int checkForLabels(instruction i);
-//calculate label offsett used for branching instructions. Accepts list of instructions, current instruction's PC & Label trying to reach. Returns imm offset needed for instructions.
+//calculate label offset used for branching instructions. Accepts list of instructions, current instruction's PC & Label trying to reach. Returns imm offset needed for instructions.
 uint32_t calculateLabelOffset(instruction* instruction_array, uint32_t currentPC, char* label);
 //R-type
 instruction r_processing(instruction i, char*split, FILE* fp);

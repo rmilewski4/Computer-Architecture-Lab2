@@ -1,16 +1,19 @@
 #include "lab2.h"
 
 
-
+//function used to identify rd, rs1, rs2 for R instructions and also write the machine code for these instructions
+//to the output file.
 instruction r_processing(instruction i, char*split, FILE* fp) {
-    //pull out rd
+    //pull out rd, split based on comma in instruction
     split = strtok(NULL, ",");
+    //Identify if zero was used 
     if(strncmp(split,"zero",4)==0) {
         i.rd = 0;
     }
     else {
-        //skip past the x character in register names
+        //skip past the x character in register names to get just the register number
         split++;
+        //convert to a decimal value
         uint32_t rd = strtol(split,NULL,10);
         i.rd = rd;
     }
@@ -34,17 +37,19 @@ instruction r_processing(instruction i, char*split, FILE* fp) {
         uint32_t rs2 = strtol(split,NULL,10);
         i.rs2 = rs2;
     }
+    //Shifting the positions of the various fields of the instructions of R instructions
     uint32_t shiftedrd = i.rd << 7;
     uint32_t shiftedfunct3 = i.funct3 << 12;
     uint32_t shiftedrs1 = i.rs1 << 15;
     uint32_t shiftedrs2 = i.rs2 << 20;
     uint32_t shiftedfunct7 = i.funct7 << 25;
+    //The full instruction is all of the shifted fields ORd together to get the complete instruction
     uint32_t fullinstruction = i.opcode | shiftedrd | shiftedfunct3 | shiftedrs1 | shiftedrs2 | shiftedfunct7;
-    printf(" instruction encoded is : %08x\n", fullinstruction);
+    //write to the file
     fprintf(fp,"%08x\n", fullinstruction);
-    printf("rd = %d, rs1 = %d, rs2 = %d\n",i.rd,i.rs1,i.rs2);
     return i;
 }
+//Similar to the R-instruction processing, except instead of rs2, we process an immediate value
 instruction iim_processing(instruction i, char*split, FILE* fp) {
 //pull out rd
     split = strtok(NULL, ",");
@@ -81,16 +86,16 @@ instruction iim_processing(instruction i, char*split, FILE* fp) {
     else {
         i.imm11_0 = imm;
     }
+    //Similar to r-instruction machine code conversion, except we make use of the imm11_0 field
     uint32_t shiftedrd = i.rd << 7;
     uint32_t shiftedfunct3 = i.funct3 << 12;
     uint32_t shiftedrs1 = i.rs1 << 15;
     uint32_t shiftedimm11_0 = i.imm11_0 << 20;
     uint32_t fullinstruction = i.opcode | shiftedrd | shiftedfunct3 | shiftedrs1 | shiftedimm11_0;
-    printf("instruction encoded is : %08x\n", fullinstruction);
     fprintf(fp,"%08x\n", fullinstruction);
-    printf("rd = %d, rs1 = %d, imm = %d\n",i.rd,i.rs1,i.imm11_0);
     return i;
 }
+//Processing for i-load type instructions, using just an rd, immediate and rs1 
 instruction ild_processing(instruction i, char*split, FILE* fp) {
     //pull out rd
     split = strtok(NULL, ", ");
@@ -104,6 +109,7 @@ instruction ild_processing(instruction i, char*split, FILE* fp) {
         i.rd = rd;
     }
     //pull out imm
+    //split based on the first parenthesis to extract
     split = strtok(NULL, "(");
     uint32_t imm = strtol(split, NULL, 10);
     i.imm11_0 = imm;
@@ -112,16 +118,16 @@ instruction ild_processing(instruction i, char*split, FILE* fp) {
     split++;
     uint32_t rs1 = strtol(split, NULL, 10);
     i.rs1 = rs1;
+    //This encoding is identical to the i-load since they are both i-type instructions.
     uint32_t shiftedrd = i.rd << 7;
     uint32_t shiftedfunct3 = i.funct3 << 12;
     uint32_t shiftedrs1 = i.rs1 << 15;
     uint32_t shiftedimm11_0 = i.imm11_0 << 20;
     uint32_t fullinstruction = i.opcode | shiftedrd | shiftedfunct3 | shiftedrs1 | shiftedimm11_0;
-    printf(" instruction encoded is : %08x\n", fullinstruction);
     fprintf(fp,"%08x\n", fullinstruction);
-    printf("rd = %d, imm = %d, rs1 = %d\n",i.rd,i.imm11_0,i.rs1);
     return i;
 }
+//store-instruction processing, using rs2, immediate and rs1
 instruction s_processing(instruction i, char* split, FILE* fp) {
     //pull out rs2
     split = strtok(NULL, ", ");
@@ -137,6 +143,8 @@ instruction s_processing(instruction i, char* split, FILE* fp) {
     //pull out imm
     split = strtok(NULL, "(");
     uint32_t imm = strtol(split, NULL, 10);
+    //since the s-type splits the immediate field into 2 separate portions, we create bitmasks and extract each section
+    //from the immediate.
     uint32_t zerotofourbitmask = 31;
     uint32_t fivetoelevenbitmask = 4064;
     i.imm4_0 = imm & zerotofourbitmask;
@@ -152,17 +160,17 @@ instruction s_processing(instruction i, char* split, FILE* fp) {
         uint32_t rs1 = strtol(split,NULL,10);
         i.rs1 = rs1;
     }
-    uint32_t shiftedrd = i.rd << 7;
+    //Encoding the machine code using the given fields
+    uint32_t shiftedimm4_0 = i.imm4_0 << 7;
     uint32_t shiftedfunct3 = i.funct3 << 12;
     uint32_t shiftedrs1 = i.rs1 << 15;
     uint32_t shiftedrs2 = i.rs2 << 20;
     uint32_t shiftedimm11_5 = i.imm11_5 << 25;
-    uint32_t fullinstruction = i.opcode | shiftedrd | shiftedfunct3 | shiftedrs1 | shiftedrs2 | shiftedimm11_5;
-    printf(" instruction encoded is : %08x\n", fullinstruction);
+    uint32_t fullinstruction = i.opcode | shiftedimm4_0 | shiftedfunct3 | shiftedrs1 | shiftedrs2 | shiftedimm11_5;
     fprintf(fp,"%08x\n", fullinstruction);
-    printf("rs2 = %d, imm = %d, imm0_4 = %d, imm11_5 = %d, rs1 = %d\n",i.rd,imm, i.imm4_0,i.imm11_5,i.rs1);
     return i;
 }
+//process branch instructions using rs1, rs2, and the immdiate/label field
 instruction b_processing(instruction* instruction_array, instruction i, char* split, FILE* fp) {
     //pull out rs1
     split = strtok(NULL, ",");
@@ -190,12 +198,14 @@ instruction b_processing(instruction* instruction_array, instruction i, char* sp
     uint32_t imm = 0;
     //if not a digit, must be a label, so calculate address
     if(!isdigit(split[0])) {
+        //Use function to get offset if it is a label
         imm = calculateLabelOffset(instruction_array,i.pc,split);
     }
     else {
+        //If it is a digit, we just convert it to a decimal to get the offset
         imm = strtol(split,NULL,10);
     }
-    printf("IMM in branch is %d\n", imm);
+    //Use bitmask to separate immediate into 2 fields
     uint32_t imm4to1bitmask = 30;
     uint32_t imm4to1 = imm & imm4to1bitmask;
     uint32_t bit11mask = 2048;
@@ -214,11 +224,10 @@ instruction b_processing(instruction* instruction_array, instruction i, char* sp
     uint32_t shiftedimm4_1and11 = i.imm4_1and11 << 7;
     uint32_t shiftedimm12and10_5 = i.imm12and10_5 << 25;
     uint32_t fullinstruction = i.opcode | shiftedimm4_1and11 | shiftedfunct3 | shiftedrs1 | shiftedrs2 | shiftedimm12and10_5;
-    printf(" instruction encoded is : %08x\n", fullinstruction);
     fprintf(fp,"%08x\n", fullinstruction);
-    printf("rs1 = %d, rs2 = %d, imm4:1|11 = %d, imm12|10:5 = %d\n",i.rs1,i.rs2,i.imm4_1and11, i.imm12and10_5);
     return i;
 }
+//Process jump instructions that take an rd and immediate field
 instruction j_processing(instruction* instruction_array, instruction i, char* split, FILE* fp) {
     //pull out rd
     split = strtok(NULL, ",");
@@ -242,7 +251,6 @@ instruction j_processing(instruction* instruction_array, instruction i, char* sp
         imm = strtol(split,NULL,10);
     }
     //encode the immediate as specified by instruction specification
-    printf("IMM in branch is %d\n", imm);
     uint32_t imm19to12 = (imm & 0xFF000) >> 12;
     uint32_t bit11mask = 2048;
     uint32_t bit11 = (imm & bit11mask) >> 3;
@@ -252,10 +260,10 @@ instruction j_processing(instruction* instruction_array, instruction i, char* sp
     uint32_t shiftedrd = i.rd << 7;
     uint32_t shifted20and10_1and11and19_12 = i.imm31_12 << 12;
     uint32_t fullinstruction = i.opcode | shiftedrd | shifted20and10_1and11and19_12;
-    printf(" instruction encoded is : %08x\n", fullinstruction);
     fprintf(fp,"%08x\n", fullinstruction);
     return i;
 }
+//Process upper instructions that take rd and immediate fields
 instruction u_processing(instruction i, char* split, FILE* fp) {
     //pull out rd
     split = strtok(NULL, ",");
@@ -277,13 +285,14 @@ instruction u_processing(instruction i, char* split, FILE* fp) {
     uint32_t shiftedrd = i.rd << 7;
     uint32_t shifted31_12 = i.imm31_12 << 12;
     uint32_t fullinstruction = i.opcode | shiftedrd | shifted31_12;
-    printf(" instruction encoded is : %08x\n", fullinstruction);
     fprintf(fp,"%08x\n", fullinstruction);
     return i;
 }
+//Function to print the machine code of an ecall, which is just the opcode
 void ecall_encoding(instruction i, FILE* fp) {
     fprintf(fp, "%08x\n", i.opcode);
 }
+//The below functions fill in the type field, opcode, funct3 & 7 (if needed) and any immediates (if needed)
 instruction add_processing(instruction i) {
     i.type = 'R';
     //opcode of 0110011 in binary is 51 in decimal
@@ -530,22 +539,20 @@ instruction ecall_processing(instruction i) {
     i.funct3 = 0;
     return i;
 }
+//Function that is used to split up the input of the given asm instructions
 void split_input(instruction* instruction_array) {
     FILE* fp = NULL;
     fp = fopen("output.txt", "w");
-    //loop through all instructoins
+    //loop through all instructions
     for(uint32_t i = 0; i < numinstructions ;i++) {
         char* instruction = instruction_array[i].instruction;
         char* split;
-        printf("PC is %d\n", instruction_array[i].pc);
         //pull out name of instruction first, this is for when no labels are on the current line.
         if(checkForLabels(instruction_array[i])==0) {
             split=strtok(instruction, " ");
-            printf("Name is %s\n",split);
         }
         else if(checkForLabels(instruction_array[i])==1) {
             //this means that it is a label on its own line, so we will continue with the loop as there are no more instructions on the line.
-            printf("Label found = %s\n", instruction_array[i].label);
             continue;
         }
         else {
@@ -554,7 +561,6 @@ void split_input(instruction* instruction_array) {
             split = strtok(instruction, " ");
             //skip past the first label, to get to instruction
             split = strtok(NULL, " ");
-            printf("Name is %s, label that was found is %s\n",split, instruction_array[i].label);
         }
         //loop through the above array of possibilities to try and find a match in that array
         for(int maps = 0; maps < sizeof(mappings)/sizeof(mappings[0]);maps++) {
@@ -565,13 +571,16 @@ void split_input(instruction* instruction_array) {
                 break;
             }
         }
+        //if the given instruction was not found in the loop, the opcode is set to 0 and this indicates error for that instruction
         if(instruction_array[i].opcode == 0) {
             printf("Malformed instruction! Please check your instruction and reformat if needed\n");
             continue;
         }
+        //Look through all possible types to process each individually
         if(instruction_array[i].type == 'R') {
             instruction_array[i] = r_processing(instruction_array[i],split, fp);
         }
+        //For i-immediate instructions
         else if(instruction_array[i].type == 'I' && instruction_array[i].opcode == 19) {
             instruction_array[i] = iim_processing(instruction_array[i],split, fp);
         }
@@ -591,18 +600,21 @@ void split_input(instruction* instruction_array) {
         else if(instruction_array[i].type == 'U') {
             instruction_array[i] = u_processing(instruction_array[i],split, fp);
         }
+        //opcode of 115 indicates ecall so that is how it is processed
         else if(instruction_array[i].opcode == 115) {
             ecall_encoding(instruction_array[i], fp);
         }
-        printf("\n\n");
     }
+    //close file when done
     fclose(fp);
 }
-
+//Function frees malloc'd memory at completion
 void cleanup_program(instruction* instruction_array) {
     for(int i = 0; i < maxfilesize; i++) {
         free(instruction_array[i].instruction);
+        instruction_array[i].instruction = NULL;
         free(instruction_array[i].label);
+        instruction_array[i].label = NULL;
     }
     free(instruction_array);
     instruction_array=NULL;
@@ -610,25 +622,17 @@ void cleanup_program(instruction* instruction_array) {
 
 uint32_t countCharactersInLine(FILE * fp, size_t offset){
     fseek(fp, offset, SEEK_SET); // go to start of instruction
-    //printf("offset is %lld\n\n", offset);
     uint32_t charCount = 1;
-    
     int ch = ' ';
-
     while((ch = getc(fp)) != EOF){ // while not at end of file
-        //printf("%c", ch);
         if(ch == '\n'){
             break;
-            
         }
         charCount++;
     }
-
     fseek(fp, offset, SEEK_SET); // go back to start of instruction
-    //printf("charCount is %d\n", charCount);
     return charCount;
 }
-
 
 uint32_t countFileLines(FILE * fp){
     uint32_t numLines = 1; //starting at first line
@@ -641,49 +645,41 @@ uint32_t countFileLines(FILE * fp){
     return numLines;
 }
 
-//for wes to implement, filename stored in prog_file add counter to get number of instructions, stored in numinstructions
 void load_program(instruction* instruction_array, char * prog_file) {
 
     FILE * fp = fopen(prog_file, "r");
-    
+    //Indicate error if issues with file
     if(fp == NULL){
         printf("Error, your input file did not successfully open!");
         exit(1);
     }
-
+    //Count the number of lines to get the number of instructions
     numinstructions = countFileLines(fp);
-    //printf("numinstructions is %d\n", numinstructions);
-    
     //point back to start of file
     fseek(fp, 0, SEEK_SET);
-
     uint32_t * lineCharacterArray = malloc(sizeof(uint32_t) * numinstructions);
-
     //count line characters, put them in array
     size_t offset = 0;
     lineCharacterArray[0] = countCharactersInLine(fp, offset);
-    //printf("linecharacters for instruction %d IS %d\n\n\n", 1,  lineCharacterArray[0]);
     for(uint32_t i = 1; i < numinstructions; i++){
         offset += lineCharacterArray[i - 1];
-        lineCharacterArray[i] = countCharactersInLine(fp, offset);
-        //printf("linecharacters for instruction %d IS %d\n\n\n", i + 1,  lineCharacterArray[i]);
-        
+        lineCharacterArray[i] = countCharactersInLine(fp, offset);        
     }
 
     for(uint32_t i = 1; i < numinstructions; i++) 
         lineCharacterArray[i]++; //add one character to each charCount for null terminator
 
-    
-
     fseek(fp, 0, SEEK_SET); //back to start of file again
     //create str array for each instruction
     for (uint32_t i = 0; i < numinstructions; i++) {
+        //Actually get the instruction on each line and save it
         char* output = fgets(instruction_array[i].instruction, lineCharacterArray[i] + 1, fp);
         if(output == NULL) {
             printf("an error occured reading the file!\nExiting!\n");
             free(lineCharacterArray);
             return;
         }
+        //Loop to set null terminator
         for(int z = 0; z < lineCharacterArray[i]; z++) {
             //if a newline was found in an instruction, replace it with a null terminator
             if(instruction_array[i].instruction[z] == '\n') {
@@ -692,7 +688,6 @@ void load_program(instruction* instruction_array, char * prog_file) {
         }
         //This null terminator being added covers the EOF case
         instruction_array[i].instruction[lineCharacterArray[i]] = '\0';
-        //printf("Instruction %d: %slasdf\n", i + 1, instruction_array[i].instruction);
     }
 
     uint32_t pc = 0;
@@ -715,8 +710,11 @@ void load_program(instruction* instruction_array, char * prog_file) {
 //return type of 1 indicates a label on it's own line, return type of 2 indicates label attached to instruction, return type of 0 means no label.
 int checkForLabels(instruction i) {
     char* instscan = i.instruction;
+    //loop until null terminator reached
     while(*instscan != '\0') {
+        //if colon found, which means a label is on the line then return given return value
         if(*instscan == ':') {
+            //If the next character after the colon is the end of the string, then it's on its own line so return 1
             if(*(instscan + 1) == '\0') {
                 return 1;
             }
@@ -726,36 +724,36 @@ int checkForLabels(instruction i) {
     }
     return 0;
 }
-
+//Function used to scan for labels throughout the entire program
 void scan_for_labels(instruction* instruction_array) {
     for(int i = 0; i < numinstructions; i++) {
         if(checkForLabels(instruction_array[i])) {
             //if label was found, catalog it and have instruction skip past it on the current line.
+            //using a duplicate of the instruction because we will be using strtok which modifies the original string
             char* instructiondupe = malloc(sizeof(char)*strlen(instruction_array[i].instruction));
             strncpy(instructiondupe,instruction_array[i].instruction,strlen(instruction_array[i].instruction));
             char* split;
             //pull out name of instruction first
             split=strtok(instructiondupe, ": ");
+            //save label into array
             strncpy(instruction_array[i].label,split,strlen(instructiondupe));
             free(instructiondupe);
         }
     }
 }
-
+//function used to calculate offset needed for branching instructions
 uint32_t calculateLabelOffset(instruction* instruction_array, uint32_t currentPC, char* label) {
     //need to loop through array until we find the given label
     for(int i = 0; i< numinstructions;i++) {
-        printf("Current label is %s, search label is %s\n", instruction_array[i].label, label);
         if(strncmp(instruction_array[i].label,label,strlen(label))==0) {
-            //if label found at current position, we can now calculate offset.
-            printf("Label found! label pc = %d, currentPC = %d\n", instruction_array[i].pc, currentPC);
+            //if label found at current position, we can now calculate offset. which is just the label's pc - current
             return instruction_array[i].pc - currentPC;
         }
     }
     //if label wasn't found, there was some type of error, so we return an offset of 0 to indicate this
     return 0;
 }
-
+//function used to create memory for array and initalize elements
 instruction* initalize_program() {
     instruction* inst_array = malloc(maxfilesize*sizeof(instruction));
     for(int i = 0; i < maxfilesize; i++ ) {
@@ -785,12 +783,10 @@ int main(int argc, char*argv[]) {
 		printf("Error: You should provide input file.\nUsage: %s <input program> \n\n",  argv[0]);
 		exit(1);
 	}
-
     char * prog_file = malloc(strlen(argv[1]) + 1); // file length
     strcpy(prog_file,argv[1]);
     instruction* instruction_array = initalize_program();
     load_program(instruction_array, prog_file);
-
     scan_for_labels(instruction_array);
     split_input(instruction_array);
     cleanup_program(instruction_array);
