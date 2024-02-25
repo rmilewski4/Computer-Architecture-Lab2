@@ -1,8 +1,8 @@
 addi x30, zero, 10 #change the last number to change fib. number
 addi x28, zero, 0   #this will hold f_0
-addi x29, zero 1    # holding f_1
-addi x31, zero 1   #counter going to limit
-addi x5, zero 0    #result
+addi x29, zero, 1    # holding f_1
+addi x31, zero, 1   #counter going to limit
+addi x5, zero, 0    #result
 LOOP:
 beq x30, x31, DONE 
 add x5, x28, x29 #get next element of fib sequence
