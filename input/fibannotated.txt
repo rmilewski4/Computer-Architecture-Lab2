@@ -1,15 +1,15 @@
-addi x30, zero, 10 #change the last number to change fib. number
-addi x28, zero, 0   #this will hold f_0
-addi x29, zero, 1    # holding f_1
+addi x30, zero, 10 # holds fibonacci number to be calculated. change the last number to change fib. number
+addi x28, zero, 0   #this will hold f_n-2, which begins as F_0, so it holds 0 to start
+addi x29, zero, 1    # holding f_n-1, which begins as F_1, so it holds 1 to start
 addi x31, zero, 1   #counter going to limit
-addi x5, zero, 0    #result
+addi x5, zero, 0    #result stored here
 LOOP:
-beq x30, x31, DONE 
-add x5, x28, x29 #get next element of fib sequence
-addi x28, x29, 0 #move n-1 element into n-2 spot
-addi x29, x5, 0 #move sum that was just done into n-1 spot
+beq x30, x31, DONE #loop to complete once fib. number reached
+add x5, x28, x29 #get next element of fib sequence by adding the previous two.
+addi x28, x29, 0 #copy n-1 element into n-2 spot
+addi x29, x5, 0 #copy sum that was just done into n-1 spot
 addi x31, x31, 1 # add 1 to counter
-beq x0, x0, LOOP
+beq x0, x0, LOOP #loop back up
 DONE:
-addi x17, x0, 10
+addi x17, x0, 10 #put 10 in x17 to indicate exit
 ecall
